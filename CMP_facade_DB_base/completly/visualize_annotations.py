@@ -32,18 +32,16 @@ def draw_bboxes(image, label_path, classes, output_path=None):
     
     # Colores para cada clase
     colors = [
-        (255, 0, 0),      # Azul
-        (0, 255, 0),      # Verde
-        (0, 0, 255),      # Rojo
-        (255, 255, 0),    # Cian
-        (255, 0, 255),    # Magenta
-        (0, 255, 255),    # Amarillo
-        (128, 0, 0),      # Azul oscuro
-        (0, 128, 0),      # Verde oscuro
-        (0, 0, 128),      # Rojo oscuro
-        (128, 128, 0),    # Cian oscuro
-        (128, 0, 128),    # Magenta oscuro
-        (0, 128, 128),    # Amarillo oscuro
+    (0, 0, 255),      # Window - Rojo
+    (255, 128, 0),    # Door - Naranja
+    (255, 0, 255),    # Cornice - Rosa
+    (0, 255, 255),    # Sill - Amarillo
+    (200, 200, 0),    # Balcony - Turquesa
+    (0, 255, 0),      # Blind - Verde
+    (128, 0, 128),    # Deco - Púrpura
+    (255, 255, 0),    # Molding - Cian
+    (0, 128, 255),    # Pillar - Azul claro
+    (0, 100, 100),    # Shop - Oliva
     ]
     
     # Leer anotaciones
@@ -151,7 +149,7 @@ def visualize_samples(images_dir, labels_dir, classes_file, output_dir, num_samp
 
 def main():
     """Función principal."""
-    base_dir = r"d:\Documentos\3RO\1ER Semestre\RN\datasets\Facade CMP\CMP_facade_DB_base\completly"
+    base_dir = r"d:\Documentos\3RO\1ER Semestre\RN\RN\CMP_facade_DB_base\completly"
     images_dir = os.path.join(base_dir, "images")
     labels_dir = os.path.join(base_dir, "labels_yolo")
     classes_file = os.path.join(base_dir, "classes.txt")

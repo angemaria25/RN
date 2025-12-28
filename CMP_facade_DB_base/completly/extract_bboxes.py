@@ -13,7 +13,6 @@ import numpy as np
 from pathlib import Path
 from tqdm import tqdm
 
-
 def get_class_names():
     """
     Obtiene los nombres de las clases desde el archivo label_names.txt.
@@ -28,29 +27,26 @@ def get_class_names():
     - 29: background (fondo)
     - 19, 78, 126, 178, 210, 50, 194, 76, 176, 225, 128: clases (ordenadas por frecuencia)
     """
-    # Mapeo basado en label_names.txt del dataset CMP Facade
-    # Formato: label_id -> (class_name, z_order)
+    
+    # Mapeo original del dataset CMP Facade (ID -> nombre)
+    # Omitimos 1 (background) y 2 (facade)
     class_mapping = {
-        1: ("background", 1),
-        2: ("facade", 2),
-        3: ("window", 10),
-        4: ("door", 5),
-        5: ("cornice", 11),
-        6: ("sill", 3),
-        7: ("balcony", 4),
-        8: ("blind", 6),
-        9: ("deco", 8),
-        10: ("molding", 7),
-        11: ("pillar", 12),
-        12: ("shop", 9)
+        3: "window",
+        4: "door",
+        5: "cornice",
+        6: "sill",
+        7: "balcony",
+        8: "blind",
+        9: "deco",
+        10: "molding",
+        11: "pillar",
+        12: "shop"
     }
     
-    # Mapeo de valores de píxel a label_id
+    # Mapeo de valores de píxel a los IDs originales
     # Basado en análisis de frecuencia: los valores más frecuentes corresponden a clases más comunes
     # Ordenados por frecuencia (excluyendo 29 que es fondo)
     pixel_to_label = {
-        29: 1,    # background
-        19: 2,    # facade (más frecuente después del fondo)
         78: 3,    # window
         126: 4,   # door
         178: 5,   # cornice
@@ -67,12 +63,14 @@ def get_class_names():
     pixel_to_class = {}
     class_names = {}
     
-    for pixel_val, label_id in pixel_to_label.items():
-        if label_id in class_mapping:
-            class_name, z_order = class_mapping[label_id]
-            yolo_id = label_id - 1  # Convertir a 0-indexed
-            pixel_to_class[pixel_val] = yolo_id
-            class_names[yolo_id] = class_name
+    # Re-indexamos para que 'window' sea ID 0
+    for i, (label_id, name) in enumerate(class_mapping.items()):
+        yolo_id = i 
+        class_names[yolo_id] = name
+        # Buscar qué píxel corresponde a este label_id
+        for pix, lbl in pixel_to_label.items():
+            if lbl == label_id:
+                pixel_to_class[pix] = yolo_id
     
     return pixel_to_class, class_names
 
@@ -102,49 +100,32 @@ def extract_bboxes_from_mask(mask_path, image_width, image_height, pixel_to_clas
     # Obtener valores únicos (clases) en la máscara
     unique_pixels = np.unique(mask)
     
-    # Procesar cada valor de píxel (clase)
-    for pixel_val in unique_pixels:
-        if pixel_val == 0:  # Ignorar fondo
-            continue
-        
-        # Mapear valor de píxel a ID de clase YOLO
-        if pixel_val not in pixel_to_class:
-            continue  # Ignorar píxeles no mapeados
-        
-        yolo_class_id = pixel_to_class[pixel_val]
-        
-        # Crear máscara binaria para esta clase
-        binary_mask = (mask == pixel_val).astype(np.uint8)
-        
-        # Encontrar contornos
-        contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
-        # Procesar cada contorno
-        for contour in contours:
-            # Obtener bounding box del contorno
-            x, y, w, h = cv2.boundingRect(contour)
-            
-            # Ignorar bboxes muy pequeños (ruido)
-            if w < 5 or h < 5:
-                continue
-            
-            # Calcular centro y normalizar
-            x_center = (x + w / 2) / image_width
-            y_center = (y + h / 2) / image_height
-            width_norm = w / image_width
-            height_norm = h / image_height
-            
-            # Asegurar que los valores están en rango [0, 1]
-            x_center = max(0, min(1, x_center))
-            y_center = max(0, min(1, y_center))
-            width_norm = max(0, min(1, width_norm))
-            height_norm = max(0, min(1, height_norm))
-            
-            bboxes.append((yolo_class_id, x_center, y_center, width_norm, height_norm))
     
+    for pixel_val in unique_pixels:
+        # Solo procesamos si el píxel está en nuestro mapeo (excluye background/facade)
+        if pixel_val in pixel_to_class:
+            yolo_class_id = pixel_to_class[pixel_val]
+            binary_mask = (mask == pixel_val).astype(np.uint8)
+            contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            
+            for contour in contours:
+                x, y, w, h = cv2.boundingRect(contour)
+                # Filtro para imágenes pequeñas: si la imagen es pequeña, 
+                # tal vez quieras bajar este 5 a 2 o 3.
+                if w < 4 or h < 4: continue 
+                
+                x_center = (x + w / 2) / image_width
+                y_center = (y + h / 2) / image_height
+                width_norm = w / image_width
+                height_norm = h / image_height
+                
+                bboxes.append((yolo_class_id, x_center, y_center, width_norm, height_norm))
     return bboxes
 
-
+# El resto de la función process_dataset y main se mantienen igual, 
+# pero asegúrate de que usen estas funciones actualizadas.
+    
+    
 def process_dataset(images_dir, masks_dir, output_dir, pixel_to_class, class_names):
     """
     Procesa todo el dataset extrayendo bounding boxes.
@@ -235,7 +216,7 @@ def print_statistics(stats, class_names):
 def main():
     """Función principal."""
     # Configurar rutas
-    base_dir = r"d:\Documentos\3RO\1ER Semestre\RN\datasets\Facade CMP\CMP_facade_DB_base\completly"
+    base_dir = r"d:\Documentos\3RO\1ER Semestre\RN\RN\CMP_facade_DB_base\completly"
     images_dir = os.path.join(base_dir, "images")
     masks_dir = os.path.join(base_dir, "masks")
     output_dir = os.path.join(base_dir, "labels_yolo")

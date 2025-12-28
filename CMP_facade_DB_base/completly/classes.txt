@@ -1,5 +1,3 @@
-background
-facade
 window
 door
 cornice
