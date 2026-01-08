@@ -114,7 +114,7 @@ def validate_annotations(images_dir, labels_dir, classes_file):
 
 def main():
     """Función principal."""
-    base_dir = r"d:\Documentos\3RO\1ER Semestre\RN\datasets\Facade CMP\CMP_facade_DB_base\completly"
+    base_dir = r"d:\Documentos\3RO\1ER Semestre\RN\RN\CMP_facade_DB_base\completly"
     images_dir = os.path.join(base_dir, "images")
     labels_dir = os.path.join(base_dir, "labels_yolo")
     classes_file = os.path.join(base_dir, "classes.txt")

@@ -14,66 +14,32 @@ from pathlib import Path
 from tqdm import tqdm
 
 def get_class_names():
-    """
-    Obtiene los nombres de las clases desde el archivo label_names.txt.
-    Retorna dos diccionarios:
-    - pixel_to_class: mapea valor de píxel a ID de clase YOLO
-    - class_names: mapea ID de clase YOLO a nombre
-    
-    El archivo label_names.txt tiene el formato:
-    [label_id] [class_name] [label_z_order]
-    
-    Los valores de píxel en las máscaras son:
-    - 29: background (fondo)
-    - 19, 78, 126, 178, 210, 50, 194, 76, 176, 225, 128: clases (ordenadas por frecuencia)
-    """
-    
-    # Mapeo original del dataset CMP Facade (ID -> nombre)
-    # Omitimos 1 (background) y 2 (facade)
-    class_mapping = {
-        3: "window",
-        4: "door",
-        5: "cornice",
-        6: "sill",
-        7: "balcony",
-        8: "blind",
-        9: "deco",
-        10: "molding",
-        11: "pillar",
-        12: "shop"
+    # Mapeo corregido basado en la inspección visual de las cajas:
+    # Valor de Píxel -> Nombre Real del Objeto
+    mapping_real = {
+        78:  "window",    # Ventana (Amarillo)
+        50:  "door",      # Puerta / Arco de entrada (Antes salía como balcony)
+        126: "cornice",   # Cornisa / Franja superior (Antes salía como door)
+        210: "sill",      # Alféizar (Bajo la ventana)
+        194: "balcony",   # Balcón
+        178: "blind",     # Persiana (Dentro de la ventana)
+        76:  "deco",      # Decoración
+        176: "molding",   # Moldura
+        225: "pillar",    # Pilar / Columna
+        128: "shop"       # Tienda (Arco comercial)
     }
-    
-    # Mapeo de valores de píxel a los IDs originales
-    # Basado en análisis de frecuencia: los valores más frecuentes corresponden a clases más comunes
-    # Ordenados por frecuencia (excluyendo 29 que es fondo)
-    pixel_to_label = {
-        78: 3,    # window
-        126: 4,   # door
-        178: 5,   # cornice
-        210: 6,   # sill
-        50: 7,    # balcony
-        194: 8,   # blind
-        76: 9,    # deco
-        176: 10,  # molding
-        225: 11,  # pillar
-        128: 12   # shop
-    }
-    
-    # Crear diccionarios de mapeo
+
+    # Creamos los diccionarios para YOLO (IDs del 0 al 9)
     pixel_to_class = {}
     class_names = {}
     
-    # Re-indexamos para que 'window' sea ID 0
-    for i, (label_id, name) in enumerate(class_mapping.items()):
-        yolo_id = i 
-        class_names[yolo_id] = name
-        # Buscar qué píxel corresponde a este label_id
-        for pix, lbl in pixel_to_label.items():
-            if lbl == label_id:
-                pixel_to_class[pix] = yolo_id
-    
+    # Ordenamos las clases para que siempre tengan el mismo ID
+    for i, pix_val in enumerate(sorted(mapping_real.keys())):
+        name = mapping_real[pix_val]
+        pixel_to_class[pix_val] = i
+        class_names[i] = name
+        
     return pixel_to_class, class_names
-
 
 def extract_bboxes_from_mask(mask_path, image_width, image_height, pixel_to_class):
     """

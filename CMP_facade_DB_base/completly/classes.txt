@@ -1,10 +1,10 @@
-window
 door
-cornice
-sill
-balcony
-blind
 deco
-molding
-pillar
+window
 shop
+cornice
+molding
+blind
+balcony
+sill
+pillar
