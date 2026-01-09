@@ -1,0 +1,7 @@
+
+train: /content/drive/MyDrive/Dataset Facade v1 /facades_cleaned/train/images
+val: /content/drive/MyDrive/Dataset Facade v1 /facades_cleaned/valid/images
+test: /content/drive/MyDrive/Dataset Facade v1 /facades_cleaned/test/images
+
+nc: 4
+names: ['door', 'window', 'balcony', 'railing']
