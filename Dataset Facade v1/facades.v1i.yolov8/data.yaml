@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 9
+names: ['Balcony', 'Door', 'Railing', 'Window', 'door', 'plant', 'spandrel', 'wall', 'windows']
+
+roboflow:
+  workspace: facades-research
+  project: facades-f5qd5
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/facades-research/facades-f5qd5/dataset/1
